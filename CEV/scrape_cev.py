@@ -6,7 +6,50 @@ from bs4 import BeautifulSoup
 
 import re
 
-top_dir = './CEV-Donald'
+top_dir = './CEV'
+url_entrance = 'https://www.biblegateway.com/versions/Contemporary-English-Version-CEV-Bible/#booklist'
+
+def scrape():
+    response = requests.get(url=url_entrance)
+
+    if response.status_code != 200:
+        return
+    
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    table = soup.find('table', class_='infotable chapterlinks updatepref')
+
+    trs = table.find_all('tr')
+
+    chapter = ''
+    sector = ''
+    for tr in trs:
+        tds = tr.find_all('td')
+        sss = tds[0].text.split('\n')
+        chapter = sss[-1]
+        sss = chapter.split(' ')
+        for i in range(len(sss)):
+            sss[i] = sss[i].strip(' ')
+        chapter = ' '.join(sss[0:-1])
+        chapter = chapter.rstrip(' ')
+        # if chapter!='Genesis':
+        #     continue
+
+
+        refs = tds[1].find_all('a')
+        for r in refs:
+            url = 'https://www.biblegateway.com' + r.get('href')
+            sector = r.text
+            _path = f'{top_dir}/{chapter}/{sector}.html'
+
+            if os.path.exists(_path):
+                print(f'skip {chapter}: {sector}')
+                continue
+
+            save_sector(url)
+            print(f'{chapter}/{sector} downloaded')
+
+
 
 def parse_chapter_sector(title):
     lst = title.split(' CEV')
@@ -16,7 +59,7 @@ def parse_chapter_sector(title):
     chapter = ' '.join(lst[0:-1])
     return chapter, sector
 
-def dnld(url='https://www.biblegateway.com/versions/Contemporary-English-Version-CEV-Bible/#booklist'):
+def save_sector(url):
 
     response = requests.get(url=url)
 
@@ -61,6 +104,7 @@ def dnld(url='https://www.biblegateway.com/versions/Contemporary-English-Version
         file.write(passage_txt)
         file.write('''</body>
 </html>''')
+        
 
 def scrapeOne(url='https://www.biblegateway.com/passage/?search=Genesis%202&version=CEV'):
 
@@ -257,7 +301,9 @@ def scrape_full(urlStart = 'https://www.biblegateway.com/versions/Contemporary-E
 
 
 
-scrape_full()
+scrape()
+
+# scrape_full()
 
 # toc()
 
