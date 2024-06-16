@@ -105,32 +105,19 @@ def save_sector(url):
         file.write('''</body>
 </html>''')
         
+def read_sector(_chapter='', _sector=''):
+    _path = f'{top_dir}/{_chapter}/{_sector}.html'
+    _contents = ''
+    with open(_path, 'r') as file:
+        _contents = file.read()
 
-def scrapeOne(url='https://www.biblegateway.com/passage/?search=Genesis%202&version=CEV'):
-
-    print('\n\n\n')
-
-    response = requests.get(url=url)
-
-    if response.status_code != 200:
-        return
-    
-    soup = BeautifulSoup(response.content, 'html.parser')
-
-    elements = soup.find_all('sup', class_='crossreference')
-    for e in elements:
-        e.decompose()
-    elements = soup.find_all('div', class_='crossrefs')
-    for e in elements:
-        e.decompose()
+    soup = BeautifulSoup(_contents, 'html.parser')
 
     elements = soup.find_all('div', class_='version-CEV result-text-style-normal text-html')
     passage_txt = ''
     for e in elements:
         passage_txt += f'{e}'
     
-    print(passage_txt)
-
     id0 = None
     ppp = soup.find_all('span')
     for p in ppp:
@@ -141,85 +128,8 @@ def scrapeOne(url='https://www.biblegateway.com/passage/?search=Genesis%202&vers
     return (id0, passage_txt)
 
 
-def toc():
-    url = 'https://www.biblegateway.com/versions/Contemporary-English-Version-CEV-Bible/#booklist'
 
-    response = requests.get(url=url)
-
-    if response.status_code != 200:
-        return
-    
-    soup = BeautifulSoup(response.content, 'html.parser')
-
-    table = soup.find('table', class_='infotable chapterlinks updatepref')
-
-    trs = table.find_all('tr')
-
-    passage_txt = ''
-    passage_txt += '<p>Holy Bible --- CEV</p>'
-    passage_txt += '<p>Compiled by Donald</p>'
-    passage_txt += '<p></p>'
-
-    chapter = ''
-    sector = ''
-    for tr in trs:
-        tds = tr.find_all('td')
-        sss = tds[0].text.split('\n')
-        chapter = sss[-1]
-        sss = chapter.split(' ')
-        for i in range(len(sss)):
-            sss[i] = sss[i].strip(' ')
-        chapter = ' '.join(sss[0:-1])
-        chapter = chapter.rstrip(' ')
-        if chapter!='Genesis':
-            continue
-
-        _path = f'{top_dir}/{chapter}'
-        print(f'"{_path}"')
-
-        if os.path.exists(_path):
-            print(f'skip {chapter}')
-            continue
-
-        print(f'ch: {chapter}')
-
-        passage_txt += f'<p> {chapter} ['
-
-        refs = tds[1].find_all('a')
-        for r in refs:
-            url = 'https://www.biblegateway.com' + r.get('href')
-            sector = r.text
-            dnld(url=url)
-            passage_txt += f'<a href="{chapter}/{sector}.html"> .{sector} </a>'
-            print(sector)
-        passage_txt += ']</p>'
-
-
-    title = "Holy Bible CEV"
-    _path = f'{top_dir}/'
-
-    filename = f'{_path}/cev.html'
-
-    if not os.path.exists(_path):
-        os.mkdir(_path)
-
-    with open(filename, 'w') as file:
-        file.write(f'''
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>{title}</title>
-    <link rel="stylesheet" href="css/passage_min.css">
-    <link rel="stylesheet" href="css/default_min.css">
-</head> 
-<body>''')
-        file.write(passage_txt)
-        file.write('''</body>
-</html>''')
-
-
-def scrape_full(urlStart = 'https://www.biblegateway.com/versions/Contemporary-English-Version-CEV-Bible/#booklist'):
+def merge_all_into_one_html():
     file_toc='toc.txt'
     file_contents = 'contents.txt'
     f = open(file_toc, "w")
@@ -230,7 +140,7 @@ def scrape_full(urlStart = 'https://www.biblegateway.com/versions/Contemporary-E
     f.write("")
     f.close()
 
-    response = requests.get(url=urlStart)
+    response = requests.get(url=url_entrance)
 
     if response.status_code != 200:
         return
@@ -261,7 +171,14 @@ def scrape_full(urlStart = 'https://www.biblegateway.com/versions/Contemporary-E
         for r in refs:
             url = 'https://www.biblegateway.com' + r.get('href')
             sector = r.text
-            id0, txt = scrapeOne(url=url)
+
+            _path = f'{top_dir}/{chapter}/{sector}.html'
+            if not os.path.exists(_path):
+                save_sector(url=url)
+
+            id0, txt = read_sector(chapter, sector)
+
+            txt = '<p></p>' + txt
             with open(file_contents, 'a') as file:
                 file.write(txt)
 
@@ -282,7 +199,7 @@ def scrape_full(urlStart = 'https://www.biblegateway.com/versions/Contemporary-E
     with open(file_contents, 'r') as file:
         txt_contents = file.read()
 
-    with open('Bible-CEV.html', 'w') as file:
+    with open(f'{top_dir}/Bible-CEV.html', 'w') as file:
         file.write(f'''
 <!DOCTYPE html>
 <html lang="en">
@@ -292,7 +209,15 @@ def scrape_full(urlStart = 'https://www.biblegateway.com/versions/Contemporary-E
     <link rel="stylesheet" href="css/passage_min.css">
     <link rel="stylesheet" href="css/default_min.css">
 </head> 
-<body>''')
+<body>
+    <p>Holy Bible</p>
+    <p>Version: CEV (Contemporary English Version)</p>
+    <p>Publisher: American Bible Society</p>
+    <p>Recompiled by Donald Bridge Li</p>
+    <p></p>
+    <p>Table of Contents</p>
+    <p></p>
+''')
         file.write(txt_toc)
         file.write(txt_contents)
         file.write('''</body>
@@ -300,10 +225,6 @@ def scrape_full(urlStart = 'https://www.biblegateway.com/versions/Contemporary-E
 
 
 
+# scrape()
 
-scrape()
-
-# scrape_full()
-
-# toc()
-
+merge_all_into_one_html()
