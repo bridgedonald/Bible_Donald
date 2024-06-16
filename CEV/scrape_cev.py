@@ -178,7 +178,9 @@ def merge_all_into_one_html():
 
             id0, txt = read_sector(chapter, sector)
 
-            txt = '<p></p>' + txt
+            _header = f'<h3>{chapter} - {sector}</h3>'
+
+            txt = '<p></p>' + _header + txt
             with open(file_contents, 'a') as file:
                 file.write(txt)
 
@@ -210,12 +212,12 @@ def merge_all_into_one_html():
     <link rel="stylesheet" href="css/default_min.css">
 </head> 
 <body>
-    <p>Holy Bible</p>
-    <p>Version: CEV (Contemporary English Version)</p>
-    <p>Publisher: American Bible Society</p>
-    <p>Recompiled by Donald Bridge Li</p>
+    <h1>Holy Bible</h1>
+    <h3>Version: CEV (Contemporary English Version)</h3>
+    <h3>Publisher: American Bible Society</h3>
+    <p>Recompiled by Donald Bridge Li (bridge5077@gmail.com)</p>
     <p></p>
-    <p>Table of Contents</p>
+    <h2>Table of Contents</h2>
     <p></p>
 ''')
         file.write(txt_toc)
