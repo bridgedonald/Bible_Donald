@@ -178,9 +178,12 @@ def merge_all_into_one_html():
 
             id0, txt = read_sector(chapter, sector)
 
-            _header = f'<h3>{chapter} - {sector}</h3>'
+            _header = ''
+            _header += f'<p class="scenechange">* * *</p>'
+            _header += '<p></p>'
+            _header += f'<p class="sector_title">{chapter} - {sector}      </p>'
 
-            txt = '<p></p>' + _header + txt
+            txt = _header + txt
             with open(file_contents, 'a') as file:
                 file.write(txt)
 
@@ -208,8 +211,11 @@ def merge_all_into_one_html():
 <head>
     <meta charset="utf-8">
     <title>{title}</title>
+    <meta name="Author" content="Donald Bridge Li (bridge5077@gmail.com)">
+    <meta name="Publisher" content="American Bible Society">
     <link rel="stylesheet" href="css/passage_min.css">
     <link rel="stylesheet" href="css/default_min.css">
+    <link rel="stylesheet" href="css/don.css">
 </head> 
 <body>
     <h1>Holy Bible</h1>
